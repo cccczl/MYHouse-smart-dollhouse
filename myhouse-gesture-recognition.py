@@ -34,7 +34,7 @@ LED_STRIP      = ws.WS2811_STRIP_GRB   # Strip type and colour ordering
 tv_is_playing = False
 
 fan_servo_pin = 6
- 
+
 fan_servo_correction=0.45
 fan_servo_maxPW=(2.0+fan_servo_correction)/1000
 fan_servo_minPW=(1.0-fan_servo_correction)/1000
@@ -215,162 +215,150 @@ if __name__ == '__main__':
         strip.begin()
         print ('Press Ctrl-C to quit.')
         while True:
-            #rainbow(strip)
-            trigger_value = move.get_trigger()
+                #rainbow(strip)
+                trigger_value = move.get_trigger()
 
-            if trigger_value > 20:
-                trigger_is_pressed = True    
+                if trigger_value > 20:
+                    trigger_is_pressed = True    
 
-                if datapoints_iterator < datapoints_max:
-                    datapoints_iterator = datapoints_iterator + 1
-                    current_gesture_samples.extend([gx, gy, gz, ax, ay, az])
+                    if datapoints_iterator < datapoints_max:
+                        datapoints_iterator = datapoints_iterator + 1
+                        current_gesture_samples.extend([gx, gy, gz, ax, ay, az])
 
-            if (trigger_value <= 10) and (trigger_is_pressed == True):
-                trigger_is_pressed = False
-                sample_iterator = sample_iterator + 1
-                fill_empty_datapoints = datapoints_max - datapoints_iterator
-                
-                if (fill_empty_datapoints > 0):
-                    for x in range(0, fill_empty_datapoints):
-                        current_gesture_samples.extend([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+                if (trigger_value <= 10) and (trigger_is_pressed == True):
+                        trigger_is_pressed = False
+                        sample_iterator = sample_iterator + 1
+                        fill_empty_datapoints = datapoints_max - datapoints_iterator
 
-                current_gesture_array = np.asarray(current_gesture_samples, dtype=np.float64)
-                print(current_gesture_array)
+                        if (fill_empty_datapoints > 0):
+                                for _ in range(fill_empty_datapoints):
+                                        current_gesture_samples.extend([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-                result_num = int(net(nd.array(current_gesture_array.reshape(-1, 240))).argmax(axis=1).asscalar())
+                        current_gesture_array = np.asarray(current_gesture_samples, dtype=np.float64)
+                        print(current_gesture_array)
 
-                print(result_dict[result_num])
-                if (result_num == 1):
-                    print('TV will be on')
-                    if tv_is_playing == False:
-                        os.system('sudo killall omxplayer.bin')
-                        omxc = subprocess.Popen(['omxplayer', '-b', VIDEO_PATH])
-                        tv_is_playing = True
-                    else: 
-                        os.system('sudo killall omxplayer.bin')
-                        tv_is_playing = False
+                        result_num = int(net(nd.array(current_gesture_array.reshape(-1, 240))).argmax(axis=1).asscalar())
 
-                    
-                if (result_num == 2 ):
-                    if shutters_opened == False:
-                        servo_left.value = 0
-                        servo_right.value = 0
-                        sleep(0.5)
-                        servo_left.value = None
-                        servo_right.value = None
-                        shutters_opened = True
-                    else :
-                        servo_left.value = 1
-                        servo_right.value = -1
-                        sleep(0.5)
-                        servo_left.value = None
-                        servo_right.value = None
-                        shutters_opened = False
-                if (result_num == 5 ):
-                    if fan_on == False:
-                        fan_servo.value = 0.8
-                        sleep(1)
-                        fan_on = True
-                        fan_on_doublespeed = False
-                    else:
-                        fan_servo.value = None
-                        fan_on = False
-                        
-                if (result_num == 6 ):
-                    if fan_on_doublespeed == False:
-                        fan_servo.value = 1
-                        sleep(1)
-                        fan_on_doublespeed = True
-                        fan_on = False
-                    else:
-                        fan_servo.value = None
-                        fan_on_doublespeed = False
-                if (result_num == 3):
-                    if letter_m_is_on == False :
-                        letter_m_is_on = True
-                        colorWipeRange(strip, Color(255,0,255), range_min = 0, range_max = 13)
-                    else :
-                        letter_m_is_on = False
-                        colorWipeRange(strip, Color(0,0,0), range_min = 0, range_max = 13)
+                        print(result_dict[result_num])
+                        if result_num == 1:
+                                print('TV will be on')
+                                if tv_is_playing == False:
+                                    os.system('sudo killall omxplayer.bin')
+                                    omxc = subprocess.Popen(['omxplayer', '-b', VIDEO_PATH])
+                                    tv_is_playing = True
+                                else: 
+                                    os.system('sudo killall omxplayer.bin')
+                                    tv_is_playing = False
 
-                if (result_num == 4):
-                    if letter_y_is_on == False :
-                        letter_y_is_on = True
-                        colorWipeRange(strip, Color(255,200,0), range_min = 14, range_max = 28)
-                    else :
-                        letter_y_is_on = False
-                        colorWipeRange(strip, Color(0,0,0), range_min = 14, range_max = 28)
 
-                #result_dict = { 
-                #    1:'tv-poke', 
-                #    5:'fan-one-circle', 
-                #    6:'fan-two-circles', 
-                #    2:'shutter-right-left', 
-                #    0:'no-gesture', 
-                #    3:'letter-m', 
-                #    4:'letter-y'
-                #}
-                datapoints_iterator = 0
-                current_gesture_samples = []
-                print ("Trigger is released, resetting gesture recognition")
+                        elif result_num == 2:
+                                if shutters_opened == False:
+                                        servo_left.value = 0
+                                        servo_right.value = 0
+                                        sleep(0.5)
+                                        shutters_opened = True
+                                else:
+                                        servo_left.value = 1
+                                        servo_right.value = -1
+                                        sleep(0.5)
+                                        shutters_opened = False
+                                servo_right.value = None
+                                servo_left.value = None
+                        elif result_num == 3:
+                                if letter_m_is_on == False :
+                                    letter_m_is_on = True
+                                    colorWipeRange(strip, Color(255,0,255), range_min = 0, range_max = 13)
+                                else :
+                                    letter_m_is_on = False
+                                    colorWipeRange(strip, Color(0,0,0), range_min = 0, range_max = 13)
 
-            while move.poll():
-                ax, ay, az = move.get_accelerometer_frame(psmove.Frame_SecondHalf)
-                gx, gy, gz = move.get_gyroscope_frame(psmove.Frame_SecondHalf)
-                qw, qx, qy, qz = move.get_orientation()
-                brightness_scaled = int(translate(qx, -1, 1, 0, 255))
-                color_scaled = wheel(int(translate(qz, -1, 1, 0, 255)), 255)
-                #color_scaled_by_brightness = int(translate(qz, -1, 1, 0, 255))
-                #print(brightness_scaled)
-                #for i in range(strip.numPixels()):
-                    #strip.setPixelColor(i, color_scaled)
-                    #strip.setBrightness(brightness_scaled)
-                    #strip.show()
-                
-                pressed, released = move.get_button_events()
+                        elif result_num == 4:
+                                if letter_y_is_on == False :
+                                    letter_y_is_on = True
+                                    colorWipeRange(strip, Color(255,200,0), range_min = 14, range_max = 28)
+                                else :
+                                    letter_y_is_on = False
+                                    colorWipeRange(strip, Color(0,0,0), range_min = 14, range_max = 28)
 
-                if (pressed == 96):
-                    shutdown_count = shutdown_count + 1
-                    if shutdown_count > 2:
-                        colorWipe(strip, Color(0,0,0))
-                        sleep (1)
-                        print ("shutting down")
-                        os.system("sudo poweroff")
-                        #subprocess.call(["/sbin/shutdown", "-h", "now"])
+                        elif result_num == 5:
+                                if fan_on == False:
+                                    fan_servo.value = 0.8
+                                    sleep(1)
+                                    fan_on = True
+                                    fan_on_doublespeed = False
+                                else:
+                                    fan_servo.value = None
+                                    fan_on = False
 
-                if pressed & psmove.Btn_TRIANGLE:
-                    print('TRIANGLE pressed')
-                    move.set_leds(0, 255, 255)
-                    if fan_on == False:
-                        fan_servo.value = -0.9
-                        sleep(1)
-                        fan_on = True
-                    else :
-                        fan_servo.value = None
-                        fan_on = False
-                    
-                if pressed & psmove.Btn_SQUARE:
-                    print('square pressed')
-                    move.set_leds(0, 0, 255)
-                    move.update_leds()
-                    if shutters_opened == False:
-                        servo_left.value = 0
-                        servo_right.value = 0
-                        sleep(0.5)
-                        servo_left.value = None
-                        servo_right.value = None
-                        shutters_opened = True
-                    else :
-                        servo_left.value = 1
-                        servo_right.value = -1
-                        sleep(0.5)
-                        servo_left.value = None
-                        servo_right.value = None
-                        shutters_opened = False
-                
-                if pressed & psmove.Btn_MOVE:
-                    move.reset_orientation()
-            
-            sleep(0.045)
+                        elif result_num == 6:
+                                if fan_on_doublespeed == False:
+                                    fan_servo.value = 1
+                                    sleep(1)
+                                    fan_on_doublespeed = True
+                                    fan_on = False
+                                else:
+                                    fan_servo.value = None
+                                    fan_on_doublespeed = False
+                        #result_dict = { 
+                        #    1:'tv-poke', 
+                        #    5:'fan-one-circle', 
+                        #    6:'fan-two-circles', 
+                        #    2:'shutter-right-left', 
+                        #    0:'no-gesture', 
+                        #    3:'letter-m', 
+                        #    4:'letter-y'
+                        #}
+                        datapoints_iterator = 0
+                        current_gesture_samples = []
+                        print ("Trigger is released, resetting gesture recognition")
+
+                while move.poll():
+                        ax, ay, az = move.get_accelerometer_frame(psmove.Frame_SecondHalf)
+                        gx, gy, gz = move.get_gyroscope_frame(psmove.Frame_SecondHalf)
+                        qw, qx, qy, qz = move.get_orientation()
+                        brightness_scaled = int(translate(qx, -1, 1, 0, 255))
+                        color_scaled = wheel(int(translate(qz, -1, 1, 0, 255)), 255)
+                        pressed, released = move.get_button_events()
+
+                        if (pressed == 96):
+                            shutdown_count = shutdown_count + 1
+                            if shutdown_count > 2:
+                                colorWipe(strip, Color(0,0,0))
+                                sleep (1)
+                                print ("shutting down")
+                                os.system("sudo poweroff")
+                                #subprocess.call(["/sbin/shutdown", "-h", "now"])
+
+                        if pressed & psmove.Btn_TRIANGLE:
+                            print('TRIANGLE pressed')
+                            move.set_leds(0, 255, 255)
+                            if fan_on == False:
+                                fan_servo.value = -0.9
+                                sleep(1)
+                                fan_on = True
+                            else :
+                                fan_servo.value = None
+                                fan_on = False
+
+                        if pressed & psmove.Btn_SQUARE:
+                                print('square pressed')
+                                move.set_leds(0, 0, 255)
+                                move.update_leds()
+                                sleep(0.5)
+                                if shutters_opened == False:
+                                        servo_left.value = 0
+                                        servo_right.value = 0
+                                        shutters_opened = True
+                                else:
+                                        servo_left.value = 1
+                                        servo_right.value = -1
+                                        shutters_opened = False
+
+                                servo_right.value = None
+                                servo_left.value = None
+                        if pressed & psmove.Btn_MOVE:
+                            move.reset_orientation()
+
+                sleep(0.045)
 
             

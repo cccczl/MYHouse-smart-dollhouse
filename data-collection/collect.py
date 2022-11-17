@@ -39,7 +39,7 @@ def client_left(client, server):
 # Called when a client sends a message
 def message_received(client, server, message):
     if len(message) > 200:
-        message = message[:200]+'..'
+        message = f'{message[:200]}..'
     print("Client(%d) said: %s" % (client['id'], message))
 
 gestures = ['tv-poke', 'shutter-right-left', 'letter-m', 'letter-y', 'fan-one-circle', 'fan-two-circles', 'no-gesture' ]
@@ -67,12 +67,12 @@ with open('motion-data-'+strftime("%Y-%m-%d-%H:%M:%S", gmtime())+'.csv', 'w', ne
             #server.send_message_to_all('{"gesture": "All gestures have been gathered!" }')
 
             sys.exit()
-        
-        gesture_type = str(gestures[gesture_iterator]) + '-' + str(sample_iterator)
+
+        gesture_type = f'{str(gestures[gesture_iterator])}-{str(sample_iterator)}'
 
         if (sample_iterator < 10):
-            gesture_type = str(gestures[gesture_iterator]) + '-0' + str(sample_iterator)
-        
+            gesture_type = f'{str(gestures[gesture_iterator])}-0{str(sample_iterator)}'
+
         if (changed == True):
             print(gesture_type)
 
@@ -87,21 +87,21 @@ with open('motion-data-'+strftime("%Y-%m-%d-%H:%M:%S", gmtime())+'.csv', 'w', ne
 
             sample_iterator = sample_iterator + 1
             fill_empty_datapoints = datapoints_max - datapoints_iterator
-            
+
             if (fill_empty_datapoints > 0):
-                for x in range(0, fill_empty_datapoints):
+                for _ in range(fill_empty_datapoints):
                     data_writer.writerow([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, datetime.datetime.now(), gesture_type])
 
             if (sample_iterator >= samples_max):
                 sample_iterator = 0
                 gesture_iterator = gesture_iterator + 1
             if (gesture_iterator < len(gestures)):
-                gesture_type = str(gestures[gesture_iterator]) + '-' + str(sample_iterator)
+                gesture_type = f'{str(gestures[gesture_iterator])}-{str(sample_iterator)}'
                 if (sample_iterator < 10):
-                    gesture_type = str(gestures[gesture_iterator]) + '-0' + str(sample_iterator)
+                    gesture_type = f'{str(gestures[gesture_iterator])}-0{str(sample_iterator)}'
             datapoints_iterator = 0
 
-                #server.send_message_to_all('{"gesture": "%s" }' % gesture_type)
+                        #server.send_message_to_all('{"gesture": "%s" }' % gesture_type)
 
         trigger_value = move.get_trigger()
         #buttons = move.get_buttons()
@@ -116,19 +116,13 @@ with open('motion-data-'+strftime("%Y-%m-%d-%H:%M:%S", gmtime())+'.csv', 'w', ne
                 move.update_leds()
                 datapoints_iterator = datapoints_iterator+1
                 data_writer.writerow([gx, gy, gz, ax, ay, az, datetime.datetime.now(), gesture_type])
-            else :
+            else:
                 print('gesture duration exceeded')
                 move.set_leds(255, 0, 0)
                 move.update_leds()
-            #server.send_message_to_all(
-            #    '{ "gx": %6.2f, "gy": %6.2f, "gz": %6.2f, "ax": %5.2f, "ay": %5.2f, "az": %5.2f, "gesture": "%s" }' % (
-            #        gx, gy, gz, ax, ay, az, gesture_type))
         if (trigger_value <= 20):
             move.set_leds(0, 0, 0)
             move.update_leds()
-        #if buttons & psmove.Btn_SQUARE:
-            #move.set_rumble(trigger_value)
-
         #else:
         #    move.set_rumble(0)
 
