@@ -56,8 +56,8 @@ training_labels = training_data_matrix[:,num_features_in_sample + 1]
 testing_labels = testing_data_matrix[:,num_features_in_sample + 1]
 
 # To prepare training and testing labels, we cut off the dash and the digits at the end of the label name, so "fan-01" becomes "fan"
-training_labels = [x[0:-3] for x in training_labels]
-testing_labels = [x[0:-3] for x in testing_labels]
+training_labels = [x[:-3] for x in training_labels]
+testing_labels = [x[:-3] for x in testing_labels]
 
 class_dict = {
     'tv-poke': 1, 
@@ -135,7 +135,7 @@ trainer = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': .05})
 # Create a function for accuracy evaluation
 def evaluate_accuracy(data_iterator, net):
     acc = mx.metric.Accuracy()
-    for i, (data, label) in enumerate(data_iterator):
+    for data, label in data_iterator:
         data = data.as_in_context(ctx).reshape((-1, num_readings_in_gesture))
         label = label.as_in_context(ctx)
         output = net(data)
@@ -175,8 +175,10 @@ for e in range(epochs):
 
     test_accuracy = evaluate_accuracy(testing_data, net)
     train_accuracy = evaluate_accuracy(training_data, net)
-    print("Epoch %s. Loss: %s, Train_acc %s, Test_acc %s" %
-          (e, moving_loss, train_accuracy, test_accuracy))
+    print(
+        f"Epoch {e}. Loss: {moving_loss}, Train_acc {train_accuracy}, Test_acc {test_accuracy}"
+    )
+
 
 # After training, we can save the trained parameters to disk
 net.save_params('ssd_%d-testing.params' % epochs)
@@ -204,7 +206,7 @@ result_dict = {
     0:'no-gesture', 
     3:'letter-m', 
     4:'letter-y'
-    
+
 }
 
 print("The network's guess is: \n")
